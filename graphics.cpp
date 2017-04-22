@@ -10,24 +10,8 @@
 #include <cmath>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <queue>
+#include <stack>
 using namespace std;
-template<class T, class T2>
-class my_pair
-{
-public:
-	T first;
-	T2 second;
-	my_pair(T f, T2 s)
-	{
-		first = f;
-		second = s;
-	}
-	bool operator==(const my_pair<T, T2> & p) const
-	{
-		return first == p.first;
-	}
-};
 void SetCanvasSize(int width, int height)
 {
 	glMatrixMode(GL_PROJECTION);
@@ -36,49 +20,36 @@ void SetCanvasSize(int width, int height)
 	glMatrixMode( GL_MODELVIEW);
 	glLoadIdentity();
 }
-queue<List<Shape> > History;
+stack<List<Shape> > History;
 List<Shape> shapes;
 List<string> Names;
 int x, y;
-int mode, index;
+int mode, index = 0;
 string inp;
+int end1 = -1;
 void Display()
 {
 	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT); //Update the colors
-
+	if (end1 != -1)
+		cout << (shapes[end1].edges.size()) << endl;
 	DrawString(465, 680, "Vertex", colors[BLUE]);
 	DrawString(590, 680, "Edge", colors[BLUE]);
 	DrawString(200, 680, "AddObject", colors[BLUE]);
 	DrawString(350, 680, "Objects", colors[BLUE]);
-	DrawString(800, 680, to_string(x).c_str(), colors[BLUE]);
-	DrawString(900, 680, +to_string(700 - y).c_str(), colors[BLUE]);
-	DrawString(900, 680, +to_string(700 - y).c_str(), colors[BLUE]);
 	for (int i = 0; i < shapes.size(); ++i)
 	{
-        shapes[i].display();
+		shapes[i].display();
 	}
-	DrawString(1000, 680, +to_string(mode).c_str(), colors[BLUE]);
 	DrawString(200, 660, inp.c_str(), colors[ORANGE]);
 	glutSwapBuffers();
 
 }
 
-/*This function is called (automatically) whenever any non-printable (such as up-arrow, down-arraw)
- * is pressed from the keyboard
- *
- * You will have to add the necessary code here when the arrow keys are pressed or any other key is pressed...
- *
- * This function has three argument variable key contains the ASCII of the key pressed, while x and y tells the
- * program coordinates of mouse pointer when key was pressed.
- *
- * */
-
 void NonPrintableKeys(int key, int x, int y)
 {
 	if (key == GLUT_KEY_LEFT /*GLUT_KEY_LEFT is constant and contains ASCII for left arrow key*/)
 	{
-// what to do when left key is pressed...
 
 	}
 	else if (key == GLUT_KEY_RIGHT /*GLUT_KEY_RIGHT is constant and contains ASCII for right arrow key*/)
@@ -87,30 +58,14 @@ void NonPrintableKeys(int key, int x, int y)
 	}
 	else if (key == GLUT_KEY_UP/*GLUT_KEY_UP is constant and contains ASCII for up arrow key*/)
 	{
-
-//b->canturn(3); //A function determines whether to turn the pacman or not
 	}
 
 	else if (key == GLUT_KEY_DOWN/*GLUT_KEY_DOWN is constant and contains ASCII for down arrow key*/)
 	{
 
 	}
-	else if (key == 19)
-	{
 
-	}
-	/* This function calls the Display function to redo the drawing. Whenever you need to redraw just call
-	 * this function*/
-	/*
-	 glutPostRedisplay();
-	 */
 }
-
-/*This function is called (automatically) whenever any printable key (such as x,b, enter, etc.)
- * is pressed from the keyboard
- * This function has three argument variable key contains the ASCII of the key pressed, while x and y tells the
- * program coordinates of mouse pointer when key was pressed.
- * */
 void PrintableKeys(unsigned char key, int x, int y)
 {
 	if (((key > 64 && key < 91) || (key > 96 && key < 123)
@@ -118,12 +73,31 @@ void PrintableKeys(unsigned char key, int x, int y)
 		inp += key;
 	else if (mode == 0 && key == 13)
 	{
+		end1++;
 		Shape s;
 		shapes.push_back(s);
 		Names.push_back(inp);
 		inp.clear();
 	}
+	else if (key == 'b')
+	{
+		if (History.size() > 0)
+		{
+			shapes = History.top();
+			History.pop();
+		}
+	}
+	else if(key=='s')
+	{
+        writecode(shapes);
+	}
+	else if(key=='w')
+	{
+	    readcode(shapes);
+	}
 }
+my_pair<int, int> last_vertex(-1, -1);
+bool first_time = false;
 void MouseClicked(int button, int state, int x, int y)
 {
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) // dealing only with left button
@@ -131,9 +105,28 @@ void MouseClicked(int button, int state, int x, int y)
 		::x = x;
 		::y = y;
 		if (HEIGHT - y > 680 && x > 200 && x < 639)
-			switchmode(x, mode);
-		if (mode == 2 || mode == 3)
-			draw(mode, x, index, HEIGHT - y, shapes);
+			switchmode(x, mode, first_time);
+		else if (mode == 2)
+		{
+			draw(mode, x, HEIGHT - y, index, shapes);
+			History.push(shapes);
+		}
+		else if (mode == 3)
+			last_vertex = get_least_dis(x, HEIGHT - y, shapes);
+	}
+	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	{
+		if (mode == 3 && first_time == false)
+		{
+			my_pair<int, int> p = get_least_dis(x, HEIGHT - y, shapes);
+			if (!(p == last_vertex))
+			{
+				Edge E(last_vertex.second, p.second);
+				shapes[last_vertex.first].AddEdge(E);
+			}
+			History.push(shapes);
+		}
+		first_time = false;
 	}
 	else if (button == GLUT_RIGHT_BUTTON) // dealing with right button
 	{

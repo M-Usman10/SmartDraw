@@ -6,13 +6,30 @@
  */
 #ifndef SMARTDRAW_H_
 #define SMARTDRAW_H_
+#include <cmath>
 #include <utility>
 #include "util.h"
 #include <list>
-#include <vector>
 #include <string>
 #include <fstream>
 using namespace std;
+template<class T, class T2>
+class my_pair
+{
+public:
+	T first;
+	T2 second;
+	my_pair(T f, T2 s)
+	{
+		first = f;
+		second = s;
+	}
+	bool operator==(const my_pair<T, T2> & p) const
+	{
+		return first == p.first && second==p.second;
+	}
+};
+
 template<typename T>
 class List: public list<T>
 {
@@ -33,13 +50,16 @@ public:
 	{
 
 	}
-	void save(const char * path)
+	void save(ofstream & ofile,const char * path)
 	{
-		ofstream ofile(path, ios::app | ios::binary);
 		ofile.write((char *) &x, sizeof(int));
 		ofile.write((char *) &y, sizeof(int));
-		ofile.close();
 	}
+	void load(ifstream & ifile,const char * path)
+		{
+			ifile.read((char *) &x, sizeof(int));
+			ifile.read((char *) &y, sizeof(int));
+		}
 };
 class Edge
 {
@@ -56,12 +76,15 @@ public:
 	{
 
 	}
-	void save(const char * path)
+	void load(ifstream & ifile,const char * path)
 	{
-		ofstream ofile(path, ios::app | ios::binary);
+		ifile.read((char *) &V1, sizeof(int));
+		ifile.read((char *) &V2, sizeof(int));
+	}
+	void save(ofstream & ofile,const char * path)
+	{
 		ofile.write((char *) &V1, sizeof(int));
 		ofile.write((char *) &V2, sizeof(int));
-		ofile.close();
 	}
 };
 class Shape
@@ -94,6 +117,7 @@ public:
 	void AddVertex(Vertex & V)
 	{
 		cout<<"Added"<<endl;
+		cout<<"Vertices are "<<no_of_vertices<<endl;
 		++no_of_vertices;
 		vertices.push_back(V);
 	}
@@ -116,32 +140,57 @@ public:
 	void display()
 	{
 		int size=vertices.size();
-		cout<<size<<endl;
+		cout<<"Vertices "<<size<<endl;
 		for (int i = 0; i < no_of_vertices; ++i)
 		{
 			DrawCircle(vertices[i].x, vertices[i].y, 2, colors[RED]);
 		}
 		for (int i = 0; i < no_of_edges; ++i)
 		{
-             DrawLine(vertices[edges[i].V1].x,vertices[edges[i].V1].y,vertices[edges[i].V1].x,vertices[edges[i].V1].y,2,colors[RED]);
+             DrawLine(vertices[edges[i].V1].x,vertices[edges[i].V1].y,vertices[edges[i].V2].x,vertices[edges[i].V2].y,5,colors[RED]);
 		}
 	}
-	void save(const char * path)
+	void save(ofstream & ofile,const char * path)
 	{
-		ofstream ofile(path, ios::binary | ios::app);
 		ofile.write((char *) &no_of_vertices, sizeof(int));
 		for (int i = 0; i < no_of_vertices; ++i)
 		{
-			vertices[i].save(path);
+			vertices[i].save(ofile,path);
 		}
 		ofile.write((char *) &no_of_edges, sizeof(int));
 		for (int i = 0; i < no_of_edges; ++i)
 		{
-			edges[i].save(path);
+			edges[i].save(ofile,path);
 		}
 	}
+	void load(ifstream & ifile,const char * path)
+	{
+
+		ifile.read((char *) &no_of_vertices, sizeof(int));
+		for (int i = 0; i < no_of_vertices; ++i)
+		{
+			Vertex v;
+			vertices.push_back(v);
+			vertices[i].load(ifile,path);
+		}
+		ifile.read((char *) &no_of_edges, sizeof(int));
+		for (int i = 0; i < no_of_edges; ++i)
+		{
+			Edge E;
+			edges.push_back(E);
+			edges[i].load(ifile,path);
+		}
+
+	}
 };
-void writecode(List<Shape> & s);
-void switchmode(int x, int & mode);
-void draw(int, int, int, int, List<Shape> & shapes);
+class rectangle:public Shape
+{
+
+};
+void writecode(List<Shape> & );
+void readcode(List<Shape> & );
+void switchmode(int , int & ,bool &);
+double l2_distance(int ,int ,int,int);
+my_pair<int,int> get_least_dis(int ,int ,List<Shape> &);
+void draw(int, int, int, int, List<Shape> &);
 #endif /* SMARTDRAW_H_ */
