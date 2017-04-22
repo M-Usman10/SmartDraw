@@ -37,6 +37,7 @@ void Display()
 	DrawString(590, 680, "Edge", colors[BLUE]);
 	DrawString(200, 680, "AddObject", colors[BLUE]);
 	DrawString(350, 680, "Objects", colors[BLUE]);
+	DrawString(590, 680, "Add Rectangle", colors[BLUE]);
 	for (int i = 0; i < shapes.size(); ++i)
 	{
 		shapes[i].display();
@@ -151,6 +152,7 @@ void Timer(int m)
 
 int main(int argc, char*argv[])
 {
+
 	glutInit(&argc, argv); // initialize the graphics library...
 	int width = 1300, height = 700;
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // we will be using color display mode

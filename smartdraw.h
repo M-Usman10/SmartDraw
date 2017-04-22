@@ -92,6 +92,8 @@ class Shape
 public:
 	int no_of_edges;
 	int no_of_vertices;
+	bool is_rec;
+	int col;
 	List<Vertex> vertices;
 	List<Edge> edges;
 	Shape(int v_size/* #vertices */, int e_size/* #edges*/, List<Vertex> & v,
@@ -101,11 +103,15 @@ public:
 		no_of_vertices = v_size;
 		vertices = v;
 		edges = e;
+		is_rec=false;
+		col=DARK_BLUE;
 	}
 	Shape()
 	{
 		no_of_edges = 0;
 		no_of_vertices = 0;
+		is_rec=false;
+		col=DARK_BLUE;
 	}
 	void AddVertex(int x, int y)
 	{
@@ -139,19 +145,26 @@ public:
 	}
 	void display()
 	{
+		if(is_rec)
+		{
+			DrawRoundRect(vertices[0].x,vertices[0].y,vertices[1].x,vertices[1].y,colors[col]);
+			return;
+		}
 		int size=vertices.size();
 		cout<<"Vertices "<<size<<endl;
 		for (int i = 0; i < no_of_vertices; ++i)
 		{
-			DrawCircle(vertices[i].x, vertices[i].y, 2, colors[RED]);
+			DrawCircle(vertices[i].x, vertices[i].y, 2, colors[col]);
 		}
 		for (int i = 0; i < no_of_edges; ++i)
 		{
-             DrawLine(vertices[edges[i].V1].x,vertices[edges[i].V1].y,vertices[edges[i].V2].x,vertices[edges[i].V2].y,5,colors[RED]);
+             DrawLine(vertices[edges[i].V1].x,vertices[edges[i].V1].y,vertices[edges[i].V2].x,vertices[edges[i].V2].y,5,colors[col]);
 		}
 	}
 	void save(ofstream & ofile,const char * path)
 	{
+		ofile.write((char *) &is_rec, sizeof(bool));
+		ofile.write((char *) &col, sizeof(int));
 		ofile.write((char *) &no_of_vertices, sizeof(int));
 		for (int i = 0; i < no_of_vertices; ++i)
 		{
@@ -165,7 +178,8 @@ public:
 	}
 	void load(ifstream & ifile,const char * path)
 	{
-
+		ifile.read((char *) &is_rec, sizeof(bool));
+		ifile.read((char *) &col, sizeof(int));
 		ifile.read((char *) &no_of_vertices, sizeof(int));
 		for (int i = 0; i < no_of_vertices; ++i)
 		{
@@ -182,10 +196,10 @@ public:
 		}
 
 	}
-};
-class rectangle:public Shape
-{
+	void is_in_rec()
+	{
 
+	}
 };
 void writecode(List<Shape> & );
 void readcode(List<Shape> & );
